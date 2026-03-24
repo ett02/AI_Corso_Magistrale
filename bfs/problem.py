@@ -6,15 +6,13 @@ class Problem(object):
     (or give an `is_goal` method) and perhaps other keyword args for the subclass."""
 
     def __init__(self, initial=None, goal=None, **kwds):
-        self.initial = initial
-        self.goal = goal
-        self.__dict__.update(**kwds)
+        self.__dict__.update(initial=initial, goal=goal, **kwds)
 
-    def actions(self, state):        raise NotImplementedError # returns a list of actions
-    def result(self, state, action): raise NotImplementedError # returns the state that results from taking an action in a state
-    def is_goal(self, state):        return state == self.goal # returns True if the state is the goal state
-    def action_cost(self, s, a, s1): return 1 # returns the cost of an action
-    def h(self, node):               return 0 # returns the heuristic of a node
+    def actions(self, state):        raise NotImplementedError
+    def result(self, state, action): raise NotImplementedError
+    def is_goal(self, state):        return state == self.goal
+    def action_cost(self, s, a, s1): return 1
+    def h(self, node):               return 0
 
     def __str__(self):
         return '{}({!r}, {!r})'.format(
