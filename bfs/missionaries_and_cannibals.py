@@ -54,9 +54,36 @@ class MissionariesAndCannibals(Problem):
     def action_cost(self, s, a, s1): return 1
     def h(self, node):               return 0
 
-mc_problem = MissionariesAndCannibals(N=3, B=2)
-print(f"Missionaries and Cannibals problem (N={mc_problem.N}, B={mc_problem.B})")
-print("    Left bank | Right bank")
-print("\t M, C | M, C \t\t BOAT")
-for (m, c, b) in path_states(astar_search(mc_problem)):
-    print(f"\t {m}, {c} | {mc_problem.N - m}, {mc_problem.N - c} \t\t {'Left' if b == 1 else 'Right'}")
+def run_game(nn=3, bb=2):
+    mc_problem = MissionariesAndCannibals(N=nn, B=bb)
+    print(f"Missionaries and Cannibals problem (N={mc_problem.N}, B={mc_problem.B})")
+    solution = astar_search(mc_problem)
+    if solution is failure:
+        print("No solution found")
+        return
+    print("Solution:")
+    for (m, c, b) in path_states(solution):
+        for i in range(m):
+            print("M ", end="")
+        for i in range(mc_problem.N - m):
+            print("  ", end="")
+        for i in range(c):
+            print("C ", end="")
+        for i in range(mc_problem.N - c):
+            print("  ", end="")
+        print("\t⛵🌊  \t" if b == 1 else "\t  🌊⛵\t", end="")
+        for i in range(mc_problem.N - m):
+            print("M ", end="")
+        for i in range(m):
+                print("  ", end="")
+        for i in range(mc_problem.N - c):
+            print("C ", end="")
+        for i in range(c):
+            print("  ", end="")
+        print()
+
+run_game(3, 2)
+print("\n\n")
+run_game(4, 2)
+print("\n\n")
+run_game(5, 3)
