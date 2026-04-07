@@ -21,85 +21,125 @@ class MissionariesAndCannibals(Problem):
     def __init__(self, N=3, B=2):
         self.__dict__.update(initial=(N, N, 1), goal=(0, 0, 0), N=N, B=B)
 
+    def _is_valid(self, left_m, left_c):
+        """ Check if a state is mathematically and logically valid. """
+        right_m = self.N - left_m
+        right_c = self.N - left_c
+        
+        # State boundaries validation
+        if left_m < 0 or left_c < 0 or right_m < 0 or right_c < 0:
+            return False
+        
+        # Cannibals outnumber missionaries on either bank when missionaries are present
+        if (left_m > 0 and left_m < left_c) or (right_m > 0 and right_m < right_c):
+            return False
+            
+        return True
+
     def actions(self, state):
-        left_m, left_c, boat_side = state # left_m = number of missionaries on the left bank, left_c = number of cannibals on the left bank
-        right_m = self.N - left_m # right_m = number of missionaries on the right bank
-        right_c = self.N - left_c # right_c = number of cannibals on the right bank
-        if boat_side == 1: # boat is on the left bank
-            return [(boat_m, boat_c) # boat_m = number of missionaries in the boat, boat_c = number of cannibals in the boat
-                    for boat_m in range(0, left_m + 1) 
-                    for boat_c in range(0, left_c + 1) 
-                    if 1 <= boat_m + boat_c <= self.B # the boat can carry at most B people and it cannot be empty
-                    and (boat_m >= boat_c or boat_m == 0) # there must never be more cannibals than missionaries on the boat
-                    and (left_m - boat_m >= left_c - boat_c or left_m - boat_m == 0) # there must never be more cannibals than missionaries on the left bank
-                    and (right_m + boat_m >= right_c + boat_c or right_m + boat_m == 0)] # there must never be more cannibals than missionaries on the right bank
-        else: # boat is on the right bank
-            return [(boat_m, boat_c) # boat_m = number of missionaries in the boat, boat_c = number of cannibals in the boat
-                    for boat_m in range(0, right_m + 1) 
-                    for boat_c in range(0, right_c + 1) 
-                    if 1 <= boat_m + boat_c <= self.B # the boat can carry at most B people and it cannot be empty
-                    and (boat_m >= boat_c or boat_m == 0) # there must never be more cannibals than missionaries on the boat
-                    and (left_m + boat_m >= left_c + boat_c or left_m + boat_m == 0) # there must never be more cannibals than missionaries on the left bank
-                    and (right_m - boat_m >= right_c - boat_c or right_m - boat_m == 0)] # there must never be more cannibals than missionaries on the right bank
+        left_m, left_c, boat_side = state
+        
+        actions_list = []
+        if boat_side == 1:
+            max_m = min(left_m, self.B)
+            max_c = min(left_c, self.B)
+            for boat_m in range(0, max_m + 1):
+                for boat_c in range(0, max_c + 1):
+                    # Valid load constraint
+                    if 1 <= boat_m + boat_c <= self.B:
+                        # Original constraint: never more cannibals than missionaries on the boat
+                        if boat_m > 0 and boat_m < boat_c:
+                            continue
+                            
+                        # Predict next state and append if safe
+                        if self._is_valid(left_m - boat_m, left_c - boat_c):
+                            actions_list.append((boat_m, boat_c))
+        else:
+            right_m = self.N - left_m
+            right_c = self.N - left_c
+            max_m = min(right_m, self.B)
+            max_c = min(right_c, self.B)
+            for boat_m in range(0, max_m + 1):
+                for boat_c in range(0, max_c + 1):
+                    # Valid load constraint
+                    if 1 <= boat_m + boat_c <= self.B:
+                        # Original constraint: never more cannibals than missionaries on the boat
+                        if boat_m > 0 and boat_m < boat_c:
+                            continue
+                            
+                        # Predict next state and append if safe
+                        if self._is_valid(left_m + boat_m, left_c + boat_c):
+                            actions_list.append((boat_m, boat_c))
+                            
+        return actions_list
     
-    def result(self, state, action): # state = (left_m, left_c, boat_side), action = (boat_m, boat_c)
+    def result(self, state, action):
         left_m, left_c, boat_side = state
         boat_m, boat_c = action
-        if boat_side == 1: # boat is on the left bank
-            return (left_m - boat_m, left_c - boat_c, 0) # boat moves to the right bank
-        else: # boat is on the right bank
-            return (left_m + boat_m, left_c + boat_c, 1) # boat moves to the left bank
+        if boat_side == 1:
+            return (left_m - boat_m, left_c - boat_c, 0)
+        else:
+            return (left_m + boat_m, left_c + boat_c, 1)
 
-    def is_goal(self, state):        return state == self.goal
-    def action_cost(self, s, a, s1): return 1
-    def h(self, node):               return 0
+    def is_goal(self, state):
+        return state == self.goal
+
+    def action_cost(self, s, a, s1):
+        return 1
+
+    def h(self, node):
+        left_m, left_c, boat_side = node.state
+        # A simple admissible heuristic: roughly estimate the minimum one-way trips needed.
+        # It's an optimistic approximation.
+        return (left_m + left_c) / self.B
 
 def run_game(nn=3, bb=2):
     mc_problem = MissionariesAndCannibals(N=nn, B=bb)
-    print(f"Missionaries and Cannibals problem (N={mc_problem.N}, B={mc_problem.B})")
-    solution = astar_search(mc_problem)
-    if solution is failure:
-        print("No solution found")
+    print(f"\nMissionaries and Cannibals problem (N={mc_problem.N}, B={mc_problem.B})")
+    print("-" * 65)
+    
+    try:
+        solution = astar_search(mc_problem)
+    except NameError:
+        # Fallback if astar_search is entirely missing from problem imports (just in case)
+        print("ERROR: astar_search not found in imports.")
         return
-    print("Solution:")
+        
+    if solution is failure:
+        print("No solution found!")
+        return
+        
     states = path_states(solution)
     actions = path_actions(solution)
+    total_steps = len(actions)
+    
+    print(f"Solution found in {total_steps} steps:\n")
+    
     for j in range(len(states)):
-        (m, c, b) = states[j]
-        for i in range(m):
-            print("M ", end="")
-        for i in range(mc_problem.N - m):
-            print("  ", end="")
-        for i in range(c):
-            print("C ", end="")
-        for i in range(mc_problem.N - c):
-            print("  ", end="")
-        print("\t⛵🌊  \t" if b == 1 else "\t  🌊⛵\t", end="")
-        for i in range(mc_problem.N - m):
-            print("M ", end="")
-        for i in range(m):
-                print("  ", end="")
-        for i in range(mc_problem.N - c):
-            print("C ", end="")
-        for i in range(c):
-            print("  ", end="")
-        if j<len(states)-1:
-            (mb, cb) = actions[j]
-            if b==1:
-                print(f"\tMoving {mb} missionaries and {cb} cannibals to the right bank...")
-            else:
-                print(f"\tMoving {mb} missionaries and {cb} cannibals to the left bank...")
-    print()
+        m, c, b = states[j]
+        
+        # Rendering the banks via python string manipulation
+        left_bank = "M " * m + "  " * (mc_problem.N - m) + "C " * c + "  " * (mc_problem.N - c)
+        right_bank = "M " * (mc_problem.N - m) + "  " * m + "C " * (mc_problem.N - c) + "  " * c
+        river = " ⛵🌊   " if b == 1 else "   🌊⛵ "
+        
+        # Displaying the state using fixed width formatting to maintain terminal alignment
+        print(f"[{j:02d}]  {left_bank} {river} {right_bank}", end="")
+        
+        if j < len(states) - 1:
+            mb, cb = actions[j]
+            direction = "right" if b == 1 else "left"
+            print(f"   --> {mb}M, {cb}C crossing {direction}", end="")
+        print()
+        
+    print(f"\nTotal path depth (solution cost): {total_steps} steps.")
+    print("-" * 65 + "\n")
     
 def test():
     run_game(3, 2)
-    print("\n\n")
     run_game(4, 2)
-    print("\n\n")
     run_game(4, 3)
-    print("\n\n")
     run_game(5, 2)
-    print("\n\n")
     run_game(5, 3)
 
 def main():
@@ -119,10 +159,25 @@ def main():
     Initial state: (N, N, 1)
     Goal state: (0, 0, 0)
     """)
-    print("Insert the number of missionaries and cannibals (N): ", end="")
-    nn = int(input())
-    print("Insert the boat capacity (B): ", end="")
-    bb = int(input())
+    
+    while True:
+        try:
+            val_n = input("Insert the number of missionaries and cannibals (N > 0): ").strip()
+            nn = int(val_n)
+            if nn <= 0:
+                print("Error: N must be strictly positive (greater than 0). Try again.\n")
+                continue
+                
+            val_b = input("Insert the boat capacity (B > 0): ").strip()
+            bb = int(val_b)
+            if bb <= 0:
+                print("Error: B must be strictly positive (greater than 0). Try again.\n")
+                continue
+                
+            break
+        except ValueError:
+            print("Invalid input! Please enter a valid integer number.\n")
+            
     run_game(nn, bb)
 
 if __name__ == "__main__":
