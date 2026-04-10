@@ -38,48 +38,38 @@ class MissionariesAndCannibals(Problem):
 
     def actions(self, state):
         missionaries_on_the_left, cannibals_on_the_left, boat_side = state
-        
         actions_list = []
-        if boat_side == 1:
-            max_m = min(missionaries_on_the_left, self.B)
-            max_c = min(cannibals_on_the_left, self.B)
-            for missionaries_on_the_boat in range(0, max_m + 1):
-                for cannibals_on_the_boat in range(0, max_c + 1):
-                    # Valid load constraint
-                    if 1 <= missionaries_on_the_boat + cannibals_on_the_boat <= self.B:
-                        # Original constraint: never more cannibals than missionaries on the boat
-                        if missionaries_on_the_boat > 0 and missionaries_on_the_boat < cannibals_on_the_boat:
-                            continue
-                            
-                        # Predict next state and append if safe
-                        if self._is_valid(missionaries_on_the_left - missionaries_on_the_boat, cannibals_on_the_left - cannibals_on_the_boat):
-                            actions_list.append((missionaries_on_the_boat, cannibals_on_the_boat))
-        else:
-            missionaries_on_the_right = self.N - missionaries_on_the_left
-            cannibals_on_the_right = self.N - cannibals_on_the_left
-            max_m = min(missionaries_on_the_right, self.B)
-            max_c = min(cannibals_on_the_right, self.B)
-            for missionaries_on_the_boat in range(0, max_m + 1):
-                for cannibals_on_the_boat in range(0, max_c + 1):
-                    # Valid load constraint
-                    if 1 <= missionaries_on_the_boat + cannibals_on_the_boat <= self.B:
-                        # Original constraint: never more cannibals than missionaries on the boat
-                        if missionaries_on_the_boat > 0 and missionaries_on_the_boat < cannibals_on_the_boat:
-                            continue
-                            
-                        # Predict next state and append if safe
-                        if self._is_valid(missionaries_on_the_left + missionaries_on_the_boat, cannibals_on_the_left + cannibals_on_the_boat):
-                            actions_list.append((missionaries_on_the_boat, cannibals_on_the_boat))
-                            
+
+        # missionaries and cannibals on the starting bank (where the boat is located)
+        missionaries_on_the_bank = missionaries_on_the_left if boat_side == 1 else self.N - missionaries_on_the_left
+        cannibals_on_the_bank = cannibals_on_the_left if boat_side == 1 else self.N - cannibals_on_the_left
+        
+        # max number of missionaries and cannibals that can be on the boat (to avoid cycles for invalid states)
+        max_m = min(missionaries_on_the_bank, self.B)
+        max_c = min(cannibals_on_the_bank, self.B)
+
+        for missionaries_on_the_boat in range(0, max_m + 1):
+            for cannibals_on_the_boat in range(0, max_c + 1):
+                # Valid load constraint
+                if 1 <= missionaries_on_the_boat + cannibals_on_the_boat <= self.B:
+                    # Original constraint: never more cannibals than missionaries on the boat
+                    if missionaries_on_the_boat > 0 and missionaries_on_the_boat < cannibals_on_the_boat:
+                        continue
+                    # Predict next state and append if safe
+                    direction = -1 if boat_side == 1 else 1
+                    if self._is_valid(missionaries_on_the_left + direction * missionaries_on_the_boat, cannibals_on_the_left + direction * cannibals_on_the_boat):
+                        actions_list.append((missionaries_on_the_boat, cannibals_on_the_boat))                   
         return actions_list
     
     def result(self, state, action):
         missionaries_on_the_left, cannibals_on_the_left, boat_side = state
         missionaries_on_the_boat, cannibals_on_the_boat = action
-        if boat_side == 1:
-            return (missionaries_on_the_left - missionaries_on_the_boat, cannibals_on_the_left - cannibals_on_the_boat, 0)
-        else:
-            return (missionaries_on_the_left + missionaries_on_the_boat, cannibals_on_the_left + cannibals_on_the_boat, 1)
+
+        direction = -1 if boat_side == 1 else 1
+        new_missionaries_on_the_left = missionaries_on_the_left + direction * missionaries_on_the_boat
+        new_cannibals_on_the_left = cannibals_on_the_left + direction * cannibals_on_the_boat
+        new_boat_side = 1 - boat_side
+        return (new_missionaries_on_the_left, new_cannibals_on_the_left, new_boat_side)
 
     def h(self, node):
         missionaries_on_the_left, cannibals_on_the_left, boat_side = node.state
@@ -125,8 +115,6 @@ def run_game(nn=3, bb=2):
             direction = "right" if b == 1 else "left"
             print(f"   --> {mb}M, {cb}C crossing {direction}", end="")
         print()
-        
-    print(f"\nTotal path depth (solution cost): {total_steps} steps.")
     print("-" * 65 + "\n")
     
 def test():
