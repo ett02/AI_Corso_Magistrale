@@ -1,8 +1,9 @@
 (define (domain linehaul_with_costs)
-    ; In questo esempio non tutte le azioni hanno lo 
-    ; stesso costo. In particolare le azioni relative
-    ; all'operatore drive avranno un costo diverso a
-    ; seconda del chilometraggio e del costo per km del mezzo
+    ; In questo esempio non tutte le azioni hanno lo stesso costo. 
+    ; In particolare le azioni relative all'operatore drive avranno un costo diverso a seconda del chilometraggio e del costo per km del mezzo.
+    ; Il requirement :action-costs permette di definire funzioni matematiche che vengono incrementate o decrementate ad ogni azione.
+    ; In particolare definiamo la funzione :total-cost che rappresenta il costo totale del piano
+    ; e nell'azione :drive inseriamo l'effetto increase che incrementa il costo totale del piano.
     (:requirements :strips :typing :action-costs)
 
     (:types
@@ -24,8 +25,7 @@
         (total-cost)
     )
 
-    ;; The effect of the delivery action is to decrease demand at
-    ;; ?l and free capacity of ?t by one.
+    ; The effect of the delivery action is to decrease demand at ?l and free capacity of ?t by one.
     (:action deliver_ambient
         :parameters (?t - truck ?l - location ?d ?d_less_one ?c ?c_less_one - quantity)
         :precondition (and (at ?t ?l)

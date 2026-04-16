@@ -1,16 +1,16 @@
 (define (domain blocksworld)
-    (:requirements :strips :typing)
+    (:requirements :strips :typing) ; Definisce le funzionalità PDDL usate: :strips per la logica base (fatti positivi o negativi) e :typing per l'uso dei tipi.
 
     (:types
         block
     )
 
-    (:predicates
-        (on ?x - block ?y - block)
-        (ontable ?x - block)
-        (clear ?x - block)
-        (holding ?x - block)
-        (handempty)
+    (:predicates ; Definisce i predicati usati nel dominio.
+        (on ?x - block ?y - block) ; Indica che il blocco ?x è sopra il blocco ?y.
+        (ontable ?x - block) ; Indica che il blocco ?x è sul tavolo.
+        (clear ?x - block) ; Indica che il blocco ?x è libero (non ha nulla sopra).
+        (holding ?x - block) ; Indica che la mano sta tenendo il blocco ?x.
+        (handempty) ; Indica che la mano è vuota.
     )
 
     (:action pick-up
@@ -33,7 +33,7 @@
             (not (holding ?x)))
     )
 
-    (:action unstack
+    (:action unstack ; Solleva il blocco ?x dal blocco ?y.
         :parameters (?x - block ?y - block)
         :precondition (and (on ?x ?y) (clear ?x) (handempty))
         :effect (and
@@ -44,7 +44,7 @@
             (not (handempty)))
     )
 
-    (:action stack
+    (:action stack ; Impila il blocco ?x sul blocco ?y.
         :parameters (?x - block ?y - block)
         :precondition (and (holding ?x) (clear ?y))
         :effect (and
