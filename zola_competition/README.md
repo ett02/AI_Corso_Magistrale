@@ -28,4 +28,24 @@ Questo è l'**ultimo spareggio**. Se a parità di materiale c'è anche lo stesso
 In giochi ristretti come Zola, avere molte mosse significa che l'avversario farà molta fatica a forzarti a fare l'unica mossa pessima rimasta a disposizione (*Zugzwang*).
 
 ---
-*I pesi attuali (`100, 10, 1`) sono un ottimo punto di partenza logico e sicuro. Se l'agente dovesse risultare troppo difensivo, si potrebbe aumentare il peso delle catture future (es. a `20` o `30`).*
+
+## Ottimizzazione della Ricerca: Forward Pruning Selettivo
+
+Per gestire l'importante vincolo di tempo (3 secondi per mossa), l'agente non si limita a un semplice algoritmo Alpha-Beta Pruning standard, ma implementa una forma aggressiva di **Forward Pruning**.
+
+### Cos'è il Forward Pruning?
+Negli algoritmi di ricerca standard (come Minimax o Alpha-Beta), si esplorano tutti i possibili rami (mosse legali) a partire da un determinato stato, "tagliando" i rami solo quando si ha la certezza matematica che non influenzeranno il risultato finale (come fa l'Alpha-Beta). 
+Il *Forward Pruning*, invece, è una tecnica euristica in cui l'agente decide *a priori* di **scartare e non esplorare del tutto** un sottoinsieme di mosse legali. Questo si fa partendo dal presupposto umano/euristico che quelle mosse scartate siano intrinsecamente peggiori, decidendo che non vale la pena sprecare tempo di calcolo per analizzarle.
+
+### Come lo abbiamo applicato in Zola?
+Nel nostro agente (`playerSmart.py`), abbiamo applicato il forward pruning separando le mosse legali in due macro-categorie: **Catture** (Captures) e **Fughe/Spostamenti** (Escapes). 
+La logica algoritmica applicata in fase di espansione dei nodi è la seguente:
+1. Se dallo stato attuale esistono mosse di cattura, l'agente esplora **esclusivamente** i rami delle catture. 
+2. Le mosse di fuga vengono immediatamente scartate a priori per risparmiare tempo.
+3. **Il "Paracadute" (Fallback)**: Le mosse di fuga vengono recuperate ed esplorate come piano d'emergenza **soltanto se** tutte le mosse di cattura analizzate portano inesorabilmente a una sconfitta certa (`score <= -9000`). Questo comportamento viene simulato simmetricamente anche quando tocca all'avversario.
+
+### I Rischi del Forward Pruning
+Sebbene questa tecnica abbatta drasticamente il branching factor (il numero medio di figli per ogni nodo) permettendo all'agente di raggiungere profondità di calcolo notevoli in soli 3 secondi, comporta un **rischio teorico intrinseco**:
+* **Ignorare Mosse "Silenziose" Vincenti**: Potrebbe esistere una mossa di fuga o di riposizionamento geniale che, pur non catturando nulla immediatamente, prepara una trappola perfetta garantendo una vittoria spettacolare in 2 o 3 turni. Tuttavia, se l'agente rileva anche una sola banale mossa di cattura disponibile, seguirà la regola del pruning e scarterà immediatamente la mossa "silenziosa" geniale, senza averne mai calcolato gli effetti a lungo termine.
+
+In giochi densi, reattivi e prevalentemente tattici come Zola, dare un'assoluta e rigida priorità alle dinamiche di cattura si rivela statisticamente una scelta vincente. Il lieve rischio di perdersi una tattica di posizionamento a lungo termine è ampiamente compensato dal brutale e schiacciante vantaggio di poter prevedere l'albero delle catture forzate con molti turni di anticipo rispetto all'avversario.
