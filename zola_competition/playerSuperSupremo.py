@@ -8,7 +8,7 @@ class TimeoutException(Exception):
 
 
 class ZolaAI:
-    def __init__(self, game, timeout=2.85):
+    def __init__(self, game, timeout=2.9):
         self.game = game
         self.timeout = timeout
         self.start_time = 0
@@ -71,7 +71,7 @@ class ZolaAI:
         others = []
         
         for m in moves:
-            if tt_best_move and m == tt_best_move:
+            if tt_best_move and m == tt_best_move: # CHECK
                 best.append(m)
             elif m[2]:  # is_capture
                 captures.append(m)
