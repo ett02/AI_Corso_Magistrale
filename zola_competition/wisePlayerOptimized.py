@@ -67,7 +67,7 @@ class ZolaAI:
         captures = []
         others = []
         for m in moves:
-            if m[2]:  # m[2] è is_capture
+            if m[2]:  # m[2] è una cattura
                 captures.append(m)
             else:
                 others.append(m)
