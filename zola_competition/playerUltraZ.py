@@ -48,9 +48,11 @@ class ZolaAI:
     def _get_phase(self, state):
         """Restituisce la fase di gioco in base al numero totale di pezzi."""
         total = self._total_pieces(state)
-        if total > 20:
+        if total > 24:
             return "opening"
-        elif total <= 20:
+        elif total > 14:
+            return "midgame"
+        else:
             return "endgame"
 
     # ----------------------------------------------------------- zobrist hash --
@@ -122,7 +124,7 @@ class ZolaAI:
             isolation_weight = 0
         elif phase == "midgame":
             w_material, w_capture, w_mobility = 100, 15, 3
-            zugzwang_bonus = 20
+            zugzwang_bonus = 0
             isolation_weight = 0
         else:  # endgame
             w_material, w_capture, w_mobility = 100, 20, 8
@@ -138,7 +140,7 @@ class ZolaAI:
             score += (3 - opponent_mobility) * zugzwang_bonus
 
         # --- Isolation score in endgame: pezzi nemici isolati = vantaggio ---
-        if isolation_weight > 0:
+        if isolation_weight > 0 and (root_count + opponent_count) <= 12:
             opp_iso  = self._isolation_score(state, opponent)
             own_iso  = self._isolation_score(state, self.root_player)
             score += (opp_iso - own_iso) * isolation_weight
