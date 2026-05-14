@@ -7,8 +7,8 @@ import time
 
 # EXAMPLE VERSION
 # #######################
-import playerDBZ as playerBmodule
-import playerUltraZ as playerRmodule
+import playerDBZ as playerRmodule
+import playerDBZplus as playerBmodule
 # #######################
 
 class Game:
